@@ -4,3 +4,4 @@ Here are my submissions to the Tidy Tuesdays weekly data science projects (https
 
 ## Week 47-New Zealand bird example
 
+![King bird](Week47/king_bird.gif)
