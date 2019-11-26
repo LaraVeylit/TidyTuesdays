@@ -1,1 +1,91 @@
 
+---
+title: "NZ_Birds"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+# Learning outcomes 
+
+1. Using a fancy font in a plot
+2. Ordering barplot
+3. Dealing with/coloring large amounts of categories
+
+
+```{r, message=FALSE}
+
+#Load data
+nz_bird <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-11-19/nz_bird.csv")
+
+library(tidyverse)
+library(RColorBrewer)
+library(showtext)
+library(sysfonts)
+```
+
+How many people voted for which bird as their favorite on which day?
+
+```{r}
+
+#Going to make a plot with rankings - just a complicated bar plot
+ranks <- nz_bird %>%
+ filter(!is.na(bird_breed)) %>%
+ filter(vote_rank== "vote_1") %>%
+  group_by(bird_breed, date) %>%
+  summarise(count = n() ) %>%
+  mutate(percent=count/sum(count))
+
+```
+
+```{r}
+#Add fancy font from google
+font_add_google(name = "Lobster", family = "lobster") 
+
+showtext_auto()
+
+showtext_begin()
+```
+
+```{r, message=F  fig.showtext=T}
+
+#Animate per day
+library(gganimate)
+library(png)
+library(transformr)
+library(magick)
+library(gridGraphics)
+
+ani <-  ggplot(data=ranks, aes(x=reorder(bird_breed, -count),
+                               y=count, fill=bird_breed)) +
+  geom_bar(stat="identity") +
+  theme(legend.position = "none",
+        panel.grid.major = element_blank(), 
+              panel.grid.minor = element_blank(),
+              panel.background = element_blank(), axis.line = element_line(colour = "black"),
+              axis.text=element_text(size=10),
+              axis.title.x=element_text(size=12, family = "lobster"),
+              plot.margin = margin(2, 2, 2, 2, "cm"),
+              axis.title.y=element_text(size=12, family = "lobster", vjust=5, hjust=5),
+              plot.title = element_text(size=20, family="lobster", color="steelblue2"),
+              plot.subtitle = element_text(size=15, family="lobster"),
+              strip.text.x = element_text(size = 10),
+              strip.text.y = element_text(size = 15),
+             # text=element_text(family="lobster")
+        ) +
+  coord_flip() +
+  scale_color_viridis_d() +
+  #Add in image of king bird
+ # annotation_custom(bird_king2, ymin = 10000, ymax = 11000) +
+  # gganimate code
+  labs(title = "New Zealand Bird Ranking",
+    subtitle = 'Date: {frame_time}', family="lobster") +
+  transition_time(date) +
+  ease_aes('linear') +
+  labs(y = "Number of votes", x= "Bird breed")
+
+
+ 
+animate(ani, height=1000, width=1000, end_pause = 20)
+```
